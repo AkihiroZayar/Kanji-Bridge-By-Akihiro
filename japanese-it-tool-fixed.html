@@ -1,0 +1,1862 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>漢字ブリッジ — Japanese IT Tool (Free)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600&family=Noto+Serif+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --ink: #0f0e17;
+        --ink-mid: #3a3848;
+        --ink-soft: #7b7896;
+        --ink-ghost: #b8b5cc;
+        --surface: #ffffff;
+        --surface-2: #f7f6fb;
+        --surface-3: #f0eefb;
+        --accent: #4a3fc0;
+        --accent-2: #7c6fe0;
+        --accent-soft: #e8e5fb;
+        --vermilion: #c0392b;
+        --verm-soft: #fbeae8;
+        --gold: #c08a00;
+        --gold-soft: #fdf6e0;
+        --border: rgba(74, 63, 192, 0.12);
+        --border-mid: rgba(74, 63, 192, 0.22);
+        --radius-sm: 6px;
+        --radius: 10px;
+        --radius-lg: 16px;
+        --radius-xl: 22px;
+        --shadow: 0 2px 16px rgba(74, 63, 192, 0.08);
+        --shadow-lg: 0 8px 40px rgba(74, 63, 192, 0.14);
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", "Noto Sans JP", sans-serif;
+        background: var(--surface-2);
+        color: var(--ink);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* NAV */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 58px;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        text-decoration: none;
+      }
+      .nav-brand .logo-jp {
+        font-family: "Noto Serif JP", serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .nav-brand .logo-en {
+        font-size: 12px;
+        color: var(--ink-soft);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .nav-links {
+        display: flex;
+        gap: 4px;
+      }
+      .nav-links a {
+        padding: 6px 14px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink-mid);
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .nav-links a:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .nav-links a.active {
+        background: var(--accent);
+        color: #fff;
+      }
+      .free-badge {
+        background: #e6f9f0;
+        color: #0a7c4f;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.05em;
+        border: 1px solid #a3e0c4;
+      }
+
+      /* HERO */
+      .hero {
+        padding: 5rem 2rem 4rem;
+        text-align: center;
+        background: linear-gradient(160deg, #fff 0%, #f0eefb 100%);
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "語";
+        position: absolute;
+        right: -20px;
+        top: -30px;
+        font-family: "Noto Serif JP", serif;
+        font-size: 260px;
+        font-weight: 700;
+        color: rgba(74, 63, 192, 0.04);
+        pointer-events: none;
+        line-height: 1;
+        user-select: none;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #e6f9f0;
+        color: #0a7c4f;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 20px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #a3e0c4;
+      }
+      .hero h1 {
+        font-family: "Noto Serif JP", serif;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        margin-bottom: 1rem;
+      }
+      .hero h1 span {
+        color: var(--accent);
+      }
+      .hero p {
+        font-size: 17px;
+        color: var(--ink-mid);
+        max-width: 520px;
+        margin: 0 auto 2.5rem;
+        font-weight: 300;
+        line-height: 1.7;
+      }
+      .hero-ctas {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 26px;
+        border-radius: 30px;
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition:
+          background 0.18s,
+          transform 0.12s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary:hover {
+        background: #3730a8;
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: transparent;
+        color: var(--accent);
+        padding: 12px 26px;
+        border-radius: 30px;
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1.5px solid var(--accent-2);
+        transition: background 0.18s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-secondary:hover {
+        background: var(--accent-soft);
+      }
+
+      /* FEATURES */
+      .features {
+        display: flex;
+        justify-content: center;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+      }
+      .feature {
+        padding: 1.25rem 2rem;
+        text-align: center;
+        border-right: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .feature:last-child {
+        border-right: none;
+      }
+      .feature .f-icon {
+        font-size: 22px;
+        margin-bottom: 4px;
+      }
+      .feature .f-title {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .feature .f-sub {
+        font-size: 11px;
+        color: var(--ink-soft);
+        margin-top: 2px;
+      }
+
+      /* SECTIONS */
+      .section {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 3.5rem 2rem;
+      }
+      .section-header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 2rem;
+      }
+      .section-num {
+        font-family: "Noto Serif JP", serif;
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--accent-soft);
+        line-height: 1;
+        user-select: none;
+      }
+      .section-title-wrap h2 {
+        font-size: 22px;
+        font-weight: 600;
+      }
+      .section-title-wrap p {
+        font-size: 14px;
+        color: var(--ink-soft);
+        margin-top: 3px;
+      }
+
+      /* TOOL CARD */
+      .tool-card {
+        background: #fff;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .tool-card-header {
+        background: var(--accent-soft);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .t-icon {
+        width: 34px;
+        height: 34px;
+        background: var(--accent);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .t-title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .t-sub {
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+      .tool-card-body {
+        padding: 1.5rem;
+      }
+
+      /* CHIPS */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 1.25rem;
+      }
+      .chip {
+        font-size: 12px;
+        padding: 5px 12px;
+        border: 1px solid var(--border-mid);
+        border-radius: 20px;
+        cursor: pointer;
+        color: var(--ink-mid);
+        background: none;
+        font-family: "Noto Sans JP", sans-serif;
+        transition: all 0.14s;
+      }
+      .chip:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* INPUTS */
+      .input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+      }
+      textarea,
+      input[type="text"] {
+        font-family: "Noto Sans JP", "Inter", sans-serif;
+        font-size: 15px;
+        color: var(--ink);
+        background: var(--surface-2);
+        border: 1.5px solid var(--border-mid);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+      textarea:focus,
+      input[type="text"]:focus {
+        border-color: var(--accent);
+        background: #fff;
+      }
+      textarea::placeholder,
+      input::placeholder {
+        color: var(--ink-ghost);
+      }
+
+      .run-btn {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius);
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        align-self: flex-end;
+      }
+      .run-btn:hover:not(:disabled) {
+        background: #3730a8;
+        transform: translateY(-1px);
+      }
+      .run-btn:disabled {
+        background: var(--ink-ghost);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .status-line {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-bottom: 10px;
+        min-height: 16px;
+      }
+      .status-line.loading {
+        color: var(--accent);
+      }
+      .status-line.error {
+        color: var(--vermilion);
+      }
+      .status-line.ok {
+        color: #0a7c4f;
+      }
+
+      /* FURIGANA OUTPUT */
+      .furigana-result {
+        background: var(--surface-3);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        padding: 1.5rem 1.75rem;
+        font-family: "Noto Sans JP", serif;
+        font-size: 18px;
+        line-height: 3.4;
+        min-height: 80px;
+        color: var(--ink);
+      }
+      .furigana-result ruby {
+        ruby-align: center;
+      }
+      .furigana-result rt {
+        font-size: 10px;
+        color: var(--accent);
+        font-weight: 500;
+      }
+      .furigana-placeholder {
+        color: var(--ink-ghost);
+        font-size: 14px;
+        font-style: italic;
+        line-height: 1.6;
+      }
+
+      /* LOADING BAR */
+      .loader-wrap {
+        margin-bottom: 10px;
+        display: none;
+      }
+      .loader-wrap.show {
+        display: block;
+      }
+      .loader-bar {
+        height: 3px;
+        background: var(--accent-soft);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .loader-bar::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 40%;
+        background: var(--accent);
+        border-radius: 3px;
+        animation: slide 1.2s ease-in-out infinite;
+      }
+      @keyframes slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      /* DIVIDER */
+      .section-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      /* DICTIONARY */
+      .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1rem;
+      }
+      .search-bar input {
+        flex: 1;
+        height: 48px;
+        font-size: 16px;
+      }
+      .search-btn {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius);
+        padding: 0 22px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+        height: 48px;
+      }
+      .search-btn:hover {
+        background: #3730a8;
+      }
+
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 1.25rem;
+      }
+      .f-chip {
+        font-size: 12px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border-mid);
+        cursor: pointer;
+        color: var(--ink-soft);
+        background: #fff;
+        transition: all 0.14s;
+      }
+      .f-chip.on,
+      .f-chip:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+        margin-bottom: 2rem;
+      }
+      .q-chip {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        cursor: pointer;
+        transition:
+          border-color 0.14s,
+          box-shadow 0.14s;
+        text-align: center;
+      }
+      .q-chip:hover {
+        border-color: var(--accent);
+        box-shadow: var(--shadow);
+      }
+      .q-chip .qj {
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .q-chip .qe {
+        font-size: 11px;
+        color: var(--ink-soft);
+        margin-top: 3px;
+      }
+
+      .dict-results {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .dict-entry {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 1.25rem 1.5rem;
+        transition: box-shadow 0.15s;
+      }
+      .dict-entry:hover {
+        box-shadow: var(--shadow-lg);
+      }
+      .entry-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .entry-term {
+        font-family: "Noto Serif JP", serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.2;
+      }
+      .entry-reading {
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 15px;
+        color: var(--accent-2);
+      }
+      .entry-cat {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .entry-cat.network {
+        background: #e8f4fd;
+        color: #1a6fa8;
+      }
+      .entry-cat.security {
+        background: var(--verm-soft);
+        color: var(--vermilion);
+      }
+      .entry-cat.cloud {
+        background: #e8f8f4;
+        color: #0f7c5a;
+      }
+      .entry-cat.dev {
+        background: var(--gold-soft);
+        color: var(--gold);
+      }
+      .entry-cat.ai {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .entry-cat.hardware {
+        background: #f3f3f3;
+        color: #555;
+      }
+      .entry-cat.general {
+        background: #f3f3f3;
+        color: #555;
+      }
+      .entry-en {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .entry-meaning {
+        font-size: 14px;
+        color: var(--ink-mid);
+        line-height: 1.7;
+        margin-bottom: 10px;
+      }
+      .entry-example {
+        background: var(--surface-3);
+        border-radius: var(--radius);
+        border-left: 3px solid var(--accent-2);
+        padding: 10px 14px;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+      .entry-example .ex-en {
+        color: var(--ink-soft);
+        margin-top: 4px;
+        font-style: italic;
+      }
+      .dict-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--ink-soft);
+        font-size: 15px;
+      }
+      .dict-empty .big {
+        font-size: 48px;
+        margin-bottom: 12px;
+      }
+      .result-count {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-bottom: 1rem;
+      }
+
+      /* FOOTER */
+      footer {
+        background: var(--ink);
+        color: rgba(255, 255, 255, 0.6);
+        text-align: center;
+        padding: 2rem;
+        font-size: 13px;
+        margin-top: 4rem;
+      }
+      footer .foot-brand {
+        font-family: "Noto Serif JP", serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 600px) {
+        .hero {
+          padding: 3rem 1.25rem 2.5rem;
+        }
+        .section {
+          padding: 2.5rem 1.25rem;
+        }
+        .input-group {
+          flex-direction: column;
+        }
+        .run-btn {
+          width: 100%;
+          justify-content: center;
+        }
+        .search-bar {
+          flex-direction: column;
+        }
+        .search-btn {
+          width: 100%;
+          justify-content: center;
+        }
+        nav {
+          padding: 0 1rem;
+        }
+        .nav-links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a class="nav-brand" href="#">
+        <span class="logo-jp">漢字ブリッジ</span>
+        <span class="logo-en">Kanji Bridge by Akihiro</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span class="free-badge">✓ 100% Free</span>
+        <div class="nav-links">
+          <a href="#furigana" class="active">Furigana</a>
+          <a href="#dictionary">IT Dictionary</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-badge">✓No internet needed · 100% Free</div>
+      <h1>Read IT Japanese<br /><span>without guessing</span></h1>
+      <p>
+        Add furigana readings to Japanese technical text, and look up IT terms
+        with bilingual explanations — all offline, all free.
+      </p>
+      <div class="hero-ctas">
+        <a href="#furigana" class="btn-primary">振 Add Furigana</a>
+        <a href="#dictionary" class="btn-secondary">📖 IT Dictionary</a>
+      </div>
+    </section>
+
+    <div class="features">
+      <div class="feature">
+        <div class="f-icon">振</div>
+        <div class="f-title">Furigana</div>
+        <div class="f-sub">Readings above kanji</div>
+      </div>
+      <div class="feature">
+        <div class="f-icon">📖</div>
+        <div class="f-title">IT Dictionary</div>
+        <div class="f-sub">100+ tech terms</div>
+      </div>
+      <div class="feature">
+        <div class="f-icon">🌐</div>
+        <div class="f-title">Bilingual</div>
+        <div class="f-sub">JP + EN explanations</div>
+      </div>
+      <div class="feature">
+        <div class="f-icon">✈️</div>
+        <div class="f-title">Offline</div>
+        <div class="f-sub">Works without internet</div>
+      </div>
+    </div>
+
+    <!-- FURIGANA -->
+    <div id="furigana">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">振</div>
+          <div class="section-title-wrap">
+            <h2>Furigana — Add reading aids</h2>
+            <p>
+              Paste any Japanese IT text to get hiragana readings shown above
+              each kanji.
+            </p>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <div class="t-icon">振</div>
+            <div>
+              <div class="t-title">ふりがな生成</div>
+              <div class="t-sub">Furigana Generator · powered by Kuromoji</div>
+            </div>
+          </div>
+          <div class="tool-card-body">
+            <div class="chips">
+              <span
+                style="
+                  font-size: 12px;
+                  color: var(--ink-soft);
+                  align-self: center;
+                  margin-right: 4px;
+                "
+                >Try an example →</span
+              >
+              <button
+                class="chip"
+                onclick="
+                  setEx(
+                    'サーバーの設定ファイルを変更する前に、必ずバックアップを取ること。',
+                  )
+                "
+              >
+                サーバー設定
+              </button>
+              <button
+                class="chip"
+                onclick="
+                  setEx(
+                    'クラウド環境でのコンテナ技術は、現代のソフトウェア開発に欠かせない。',
+                  )
+                "
+              >
+                クラウド技術
+              </button>
+              <button
+                class="chip"
+                onclick="
+                  setEx(
+                    'データベースの最適化により、クエリの実行速度が大幅に向上した。',
+                  )
+                "
+              >
+                DB最適化
+              </button>
+              <button
+                class="chip"
+                onclick="
+                  setEx('機械学習モデルの訓練には大量の計算資源が必要です。')
+                "
+              >
+                機械学習
+              </button>
+              <button
+                class="chip"
+                onclick="
+                  setEx(
+                    '仮想化技術を用いてサーバーの負荷を分散させる方法を検討する。',
+                  )
+                "
+              >
+                仮想化
+              </button>
+              <button
+                class="chip"
+                onclick="
+                  setEx(
+                    '脆弱性が発見されたため、緊急のセキュリティパッチを適用する必要がある。',
+                  )
+                "
+              >
+                セキュリティ
+              </button>
+            </div>
+            <div class="input-group">
+              <textarea
+                id="furi-input"
+                placeholder="日本語のITテキストをここに入力してください…&#10;(Paste Japanese IT text here)"
+              ></textarea>
+              <button class="run-btn" id="furi-btn" onclick="doFurigana()">
+                振 Add Furigana
+              </button>
+            </div>
+            <div class="loader-wrap" id="furi-loader">
+              <div class="loader-bar"></div>
+            </div>
+            <p class="status-line" id="furi-status">
+              Enter text above and click "Add Furigana" to generate readings.
+            </p>
+            <div class="furigana-result" id="furi-out">
+              <span class="furigana-placeholder"
+                >Your annotated text will appear here, with small hiragana
+                readings above each kanji…</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- DICTIONARY -->
+    <div id="dictionary">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">辞</div>
+          <div class="section-title-wrap">
+            <h2>IT Dictionary — 技術用語辞典</h2>
+            <p>
+              Search IT terminology in English, Japanese, or romaji. Fully
+              built-in, no internet needed.
+            </p>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <div class="t-icon">辞</div>
+            <div>
+              <div class="t-title">IT用語辞典</div>
+              <div class="t-sub">
+                Japanese IT Dictionary · 100+ terms built-in
+              </div>
+            </div>
+          </div>
+          <div class="tool-card-body">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="dict-input"
+                placeholder="Search: firewall, ファイアウォール, kuraudo, server…"
+                onkeydown="if (event.key === 'Enter') doSearch();"
+              />
+              <button class="search-btn" onclick="doSearch()">🔍 Search</button>
+            </div>
+            <div class="filter-bar">
+              <span
+                style="
+                  font-size: 12px;
+                  color: var(--ink-soft);
+                  align-self: center;
+                "
+                >Filter:</span
+              >
+              <button class="f-chip on" onclick="setF(this, 'all')">All</button>
+              <button class="f-chip" onclick="setF(this, 'network')">
+                🌐 Network
+              </button>
+              <button class="f-chip" onclick="setF(this, 'security')">
+                🔒 Security
+              </button>
+              <button class="f-chip" onclick="setF(this, 'cloud')">
+                ☁️ Cloud
+              </button>
+              <button class="f-chip" onclick="setF(this, 'dev')">💻 Dev</button>
+              <button class="f-chip" onclick="setF(this, 'ai')">
+                🤖 AI・ML
+              </button>
+              <button class="f-chip" onclick="setF(this, 'hardware')">
+                🖥 Hardware
+              </button>
+            </div>
+            <div class="quick-grid">
+              <div class="q-chip" onclick="qs('クラウド')">
+                <div class="qj">クラウド</div>
+                <div class="qe">Cloud</div>
+              </div>
+              <div class="q-chip" onclick="qs('サーバー')">
+                <div class="qj">サーバー</div>
+                <div class="qe">Server</div>
+              </div>
+              <div class="q-chip" onclick="qs('データベース')">
+                <div class="qj">データベース</div>
+                <div class="qe">Database</div>
+              </div>
+              <div class="q-chip" onclick="qs('セキュリティ')">
+                <div class="qj">セキュリティ</div>
+                <div class="qe">Security</div>
+              </div>
+              <div class="q-chip" onclick="qs('機械学習')">
+                <div class="qj">機械学習</div>
+                <div class="qe">Machine Learning</div>
+              </div>
+              <div class="q-chip" onclick="qs('コンテナ')">
+                <div class="qj">コンテナ</div>
+                <div class="qe">Container</div>
+              </div>
+              <div class="q-chip" onclick="qs('API')">
+                <div class="qj">API</div>
+                <div class="qe">API</div>
+              </div>
+              <div class="q-chip" onclick="qs('暗号化')">
+                <div class="qj">暗号化</div>
+                <div class="qe">Encryption</div>
+              </div>
+              <div class="q-chip" onclick="qs('ファイアウォール')">
+                <div class="qj">ファイアウォール</div>
+                <div class="qe">Firewall</div>
+              </div>
+              <div class="q-chip" onclick="qs('仮想化')">
+                <div class="qj">仮想化</div>
+                <div class="qe">Virtualization</div>
+              </div>
+              <div class="q-chip" onclick="qs('デプロイ')">
+                <div class="qj">デプロイ</div>
+                <div class="qe">Deploy</div>
+              </div>
+              <div class="q-chip" onclick="qs('バックアップ')">
+                <div class="qj">バックアップ</div>
+                <div class="qe">Backup</div>
+              </div>
+              <div class="q-chip" onclick="qs('脆弱性')">
+                <div class="qj">脆弱性</div>
+                <div class="qe">Vulnerability</div>
+              </div>
+              <div class="q-chip" onclick="qs('負荷分散')">
+                <div class="qj">負荷分散</div>
+                <div class="qe">Load Balancing</div>
+              </div>
+              <div class="q-chip" onclick="qs('マイクロサービス')">
+                <div class="qj">マイクロサービス</div>
+                <div class="qe">Microservices</div>
+              </div>
+              <div class="q-chip" onclick="qs('CI/CD')">
+                <div class="qj">CI/CD</div>
+                <div class="qe">CI/CD</div>
+              </div>
+              <div class="q-chip" onclick="qs('プロトコル')">
+                <div class="qj">プロトコル</div>
+                <div class="qe">Protocol</div>
+              </div>
+              <div class="q-chip" onclick="qs('認証')">
+                <div class="qj">認証</div>
+                <div class="qe">Authentication</div>
+              </div>
+            </div>
+            <div id="dict-results">
+              <div class="dict-empty">
+                <div class="big">辞</div>
+                Type a term above or click a quick chip to look it up
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="foot-brand">アキヒロの漢字ブリッジ</div>
+      <p>
+        Japanese IT Language Tool &nbsp;·&nbsp; © 2026 Akihiro All Rights
+        Reserved &nbsp;·&nbsp; Furigana by Kuromoji &nbsp;·&nbsp; 100% Free
+        &amp; Offline
+      </p>
+      <p>
+        This site is a personal project by Akihiro, built to help Japanese
+        learners and IT professionals navigate technical language. It uses the
+        Kuromoji library for furigana generation and includes a custom-built
+        dictionary of 100+ IT terms with bilingual explanations. The tool is
+        completely free to use and works offline after the initial setup.
+      </p>
+
+      <p>
+        This site may make mistakes sometimes, please double-check with other
+        sources if something seems off!
+      </p>
+    </footer>
+
+    <!-- Kuromoji via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+    <script>
+      /* ══════════════════════════════════════════════
+   BUILT-IN IT DICTIONARY
+══════════════════════════════════════════════ */
+      const DICT = [
+        // NETWORK
+        {
+          term: "ネットワーク",
+          reading: "ねっとわーく",
+          romaji: "nettowaku",
+          english: "Network",
+          category: "network",
+          meaning:
+            "複数のコンピューターや機器を接続して、データを共有するシステム。",
+          example_jp: "社内ネットワークを通じてファイルを共有する。",
+          example_en: "Share files through the corporate network.",
+        },
+        {
+          term: "プロトコル",
+          reading: "ぷろとこる",
+          romaji: "purotokoru",
+          english: "Protocol",
+          category: "network",
+          meaning: "コンピューター間でデータを送受信するための通信規則。",
+          example_jp: "HTTPプロトコルを使ってウェブページを送受信する。",
+          example_en: "Send and receive web pages using the HTTP protocol.",
+        },
+        {
+          term: "ルーター",
+          reading: "るーたー",
+          romaji: "ruta",
+          english: "Router",
+          category: "network",
+          meaning: "異なるネットワーク間でデータパケットを転送する装置。",
+          example_jp: "ルーターがIPアドレスを元にパケットを転送する。",
+          example_en: "The router forwards packets based on IP addresses.",
+        },
+        {
+          term: "IPアドレス",
+          reading: "あいぴーあどれす",
+          romaji: "aipi adoresu",
+          english: "IP Address",
+          category: "network",
+          meaning: "ネットワーク上の各機器を識別するための数値アドレス。",
+          example_jp: "このサーバーのIPアドレスは192.168.1.1です。",
+          example_en: "This server's IP address is 192.168.1.1.",
+        },
+        {
+          term: "DNS",
+          reading: "でぃーえぬえす",
+          romaji: "di enu esu",
+          english: "DNS (Domain Name System)",
+          category: "network",
+          meaning: "ドメイン名をIPアドレスに変換するシステム。",
+          example_jp: "DNSサーバーがドメイン名をIPアドレスに解決する。",
+          example_en: "The DNS server resolves domain names to IP addresses.",
+        },
+        {
+          term: "帯域幅",
+          reading: "たいいきはば",
+          romaji: "taiikihaba",
+          english: "Bandwidth",
+          category: "network",
+          meaning: "ネットワーク回線が単位時間に転送できるデータ量。",
+          example_jp: "帯域幅が不足しているため、動画が途切れる。",
+          example_en:
+            "The video keeps cutting out due to insufficient bandwidth.",
+        },
+        {
+          term: "レイテンシ",
+          reading: "れいてんし",
+          romaji: "reitenshi",
+          english: "Latency",
+          category: "network",
+          meaning: "データが送信元から宛先に届くまでの遅延時間。",
+          example_jp: "レイテンシが高いと、オンラインゲームの操作が遅れる。",
+          example_en: "High latency causes delayed responses in online games.",
+        },
+        {
+          term: "VPN",
+          reading: "ぶいぴーえぬ",
+          romaji: "bui pi enu",
+          english: "VPN (Virtual Private Network)",
+          category: "network",
+          meaning:
+            "公共のネットワーク上に暗号化された仮想専用線を構築する技術。",
+          example_jp: "VPNを使って自宅から会社のネットワークに安全に接続する。",
+          example_en:
+            "Use VPN to securely connect to the company network from home.",
+        },
+        {
+          term: "ポート",
+          reading: "ぽーと",
+          romaji: "poto",
+          english: "Port",
+          category: "network",
+          meaning: "ネットワーク通信でアプリケーションを区別するための番号。",
+          example_jp: "HTTPはポート80番を使用する。",
+          example_en: "HTTP uses port number 80.",
+        },
+        {
+          term: "負荷分散",
+          reading: "ふかぶんさん",
+          romaji: "fuka bunsan",
+          english: "Load Balancing",
+          category: "network",
+          meaning:
+            "複数のサーバーにトラフィックを分散させて処理効率を上げる技術。",
+          example_jp: "負荷分散を設定してサーバーダウンを防ぐ。",
+          example_en: "Configure load balancing to prevent server downtime.",
+        },
+
+        // SECURITY
+        {
+          term: "セキュリティ",
+          reading: "せきゅりてぃ",
+          romaji: "sekyuriti",
+          english: "Security",
+          category: "security",
+          meaning: "システムやデータを不正アクセスや攻撃から守るための対策。",
+          example_jp: "情報セキュリティポリシーを策定する。",
+          example_en: "Establish an information security policy.",
+        },
+        {
+          term: "ファイアウォール",
+          reading: "ふぁいあうぉーる",
+          romaji: "faiauoru",
+          english: "Firewall",
+          category: "security",
+          meaning: "不正なネットワークアクセスを遮断するセキュリティシステム。",
+          example_jp:
+            "ファイアウォールで外部からの不正アクセスをブロックする。",
+          example_en: "Block unauthorized external access with a firewall.",
+        },
+        {
+          term: "暗号化",
+          reading: "あんごうか",
+          romaji: "angouka",
+          english: "Encryption",
+          category: "security",
+          meaning: "データを第三者が読めない形式に変換して保護する技術。",
+          example_jp: "通信内容をAES暗号化で保護する。",
+          example_en: "Protect communication content with AES encryption.",
+        },
+        {
+          term: "認証",
+          reading: "にんしょう",
+          romaji: "ninsho",
+          english: "Authentication",
+          category: "security",
+          meaning: "ユーザーやシステムの身元を確認するプロセス。",
+          example_jp: "二段階認証を有効にしてアカウントを保護する。",
+          example_en:
+            "Enable two-factor authentication to protect your account.",
+        },
+        {
+          term: "脆弱性",
+          reading: "ぜいじゃくせい",
+          romaji: "zeijyakusei",
+          english: "Vulnerability",
+          category: "security",
+          meaning: "システムに存在するセキュリティ上の欠陥や弱点。",
+          example_jp: "脆弱性が発見されたため、パッチを適用した。",
+          example_en:
+            "A patch was applied after a vulnerability was discovered.",
+        },
+        {
+          term: "マルウェア",
+          reading: "まるうぇあ",
+          romaji: "maruuea",
+          english: "Malware",
+          category: "security",
+          meaning: "コンピューターに害を与える悪意あるソフトウェアの総称。",
+          example_jp: "マルウェアに感染してデータが盗まれた。",
+          example_en: "Data was stolen after a malware infection.",
+        },
+        {
+          term: "フィッシング",
+          reading: "ふぃっしんぐ",
+          romaji: "fisshingu",
+          english: "Phishing",
+          category: "security",
+          meaning:
+            "偽のウェブサイトやメールでユーザーの個人情報を騙し取る攻撃。",
+          example_jp: "フィッシングメールに注意してパスワードを守る。",
+          example_en: "Beware of phishing emails to protect your password.",
+        },
+        {
+          term: "認可",
+          reading: "にんか",
+          romaji: "ninka",
+          english: "Authorization",
+          category: "security",
+          meaning: "認証されたユーザーに対してアクセス権限を与えるプロセス。",
+          example_jp: "管理者のみがデータベースへの認可を持つ。",
+          example_en: "Only administrators have authorization to the database.",
+        },
+        {
+          term: "SSL/TLS",
+          reading: "えすえすえる・てぃーえるえす",
+          romaji: "esu esu eru / ti eru esu",
+          english: "SSL/TLS",
+          category: "security",
+          meaning: "インターネット上の通信を暗号化するセキュリティプロトコル。",
+          example_jp: "HTTPS通信はTLSで暗号化されている。",
+          example_en: "HTTPS communications are encrypted with TLS.",
+        },
+        {
+          term: "ゼロトラスト",
+          reading: "ぜろとらすと",
+          romaji: "zero torasuto",
+          english: "Zero Trust",
+          category: "security",
+          meaning:
+            "すべてのアクセスを信頼せず、常に検証するセキュリティモデル。",
+          example_jp: "ゼロトラストアーキテクチャで内部脅威にも対応する。",
+          example_en: "Zero Trust architecture also addresses insider threats.",
+        },
+
+        // CLOUD
+        {
+          term: "クラウド",
+          reading: "くらうど",
+          romaji: "kuraudo",
+          english: "Cloud Computing",
+          category: "cloud",
+          meaning:
+            "インターネット経由でコンピューターリソースを提供するサービス形態。",
+          example_jp: "クラウドに移行してインフラコストを削減した。",
+          example_en: "Migrated to cloud to reduce infrastructure costs.",
+        },
+        {
+          term: "コンテナ",
+          reading: "こんてな",
+          romaji: "kontena",
+          english: "Container",
+          category: "cloud",
+          meaning:
+            "アプリケーションとその依存環境をパッケージ化した仮想化単位。",
+          example_jp: "Dockerコンテナでアプリを本番環境に展開する。",
+          example_en: "Deploy the app to production using Docker containers.",
+        },
+        {
+          term: "仮想化",
+          reading: "かそうか",
+          romaji: "kasouka",
+          english: "Virtualization",
+          category: "cloud",
+          meaning:
+            "物理的なハードウェアリソースをソフトウェアで仮想的に分割する技術。",
+          example_jp: "仮想化でサーバーリソースを効率的に使用する。",
+          example_en:
+            "Use virtualization to efficiently utilize server resources.",
+        },
+        {
+          term: "スケーリング",
+          reading: "すけーりんぐ",
+          romaji: "sukeeringu",
+          english: "Scaling",
+          category: "cloud",
+          meaning: "システムの処理能力を需要に合わせて拡張・縮小すること。",
+          example_jp: "トラフィック増加時に自動スケーリングを設定する。",
+          example_en: "Set up auto-scaling for traffic spikes.",
+        },
+        {
+          term: "マイクロサービス",
+          reading: "まいくろさーびす",
+          romaji: "maikuro saabisu",
+          english: "Microservices",
+          category: "cloud",
+          meaning:
+            "アプリケーションを小さな独立したサービスに分割するアーキテクチャ。",
+          example_jp: "モノリスからマイクロサービスに移行する。",
+          example_en: "Migrate from monolith to microservices.",
+        },
+        {
+          term: "サーバーレス",
+          reading: "さーばーれす",
+          romaji: "saabaresu",
+          english: "Serverless",
+          category: "cloud",
+          meaning: "サーバー管理不要でコードを実行できるクラウド実行モデル。",
+          example_jp: "AWS Lambdaでサーバーレス関数を実装した。",
+          example_en: "Implemented serverless functions with AWS Lambda.",
+        },
+        {
+          term: "オーケストレーション",
+          reading: "おーけすとれーしょん",
+          romaji: "ookesutoreeshon",
+          english: "Orchestration",
+          category: "cloud",
+          meaning: "複数のコンテナやサービスを自動的に管理・調整する仕組み。",
+          example_jp: "Kubernetesでコンテナのオーケストレーションを行う。",
+          example_en: "Perform container orchestration with Kubernetes.",
+        },
+        {
+          term: "バックアップ",
+          reading: "ばっくあっぷ",
+          romaji: "bakkuappu",
+          english: "Backup",
+          category: "cloud",
+          meaning:
+            "データを別の場所に複製しておき、障害時に復元できるようにすること。",
+          example_jp: "毎日自動バックアップを取るように設定した。",
+          example_en: "Set up automatic daily backups.",
+        },
+
+        // DEV
+        {
+          term: "データベース",
+          reading: "でーたべーす",
+          romaji: "deetabeesu",
+          english: "Database",
+          category: "dev",
+          meaning: "構造化されたデータを効率よく格納・検索・管理するシステム。",
+          example_jp: "MySQLデータベースに顧客情報を保存する。",
+          example_en: "Store customer information in a MySQL database.",
+        },
+        {
+          term: "API",
+          reading: "えーぴーあい",
+          romaji: "e pi ai",
+          english: "API (Application Programming Interface)",
+          category: "dev",
+          meaning: "ソフトウェア同士が通信するためのインターフェースの仕様。",
+          example_jp: "REST APIを使って外部サービスと連携する。",
+          example_en: "Integrate with external services using a REST API.",
+        },
+        {
+          term: "デプロイ",
+          reading: "でぷろい",
+          romaji: "depuroi",
+          english: "Deploy",
+          category: "dev",
+          meaning: "開発したアプリケーションを本番環境に公開・配置すること。",
+          example_jp: "新バージョンを本番サーバーにデプロイした。",
+          example_en: "Deployed the new version to the production server.",
+        },
+        {
+          term: "CI/CD",
+          reading: "しーあい・しーでぃー",
+          romaji: "shi ai shi di",
+          english: "CI/CD (Continuous Integration/Delivery)",
+          category: "dev",
+          meaning:
+            "コードの変更を自動的にビルド・テスト・デプロイするパイプライン。",
+          example_jp: "CI/CDパイプラインで自動テストを実行する。",
+          example_en: "Run automated tests with the CI/CD pipeline.",
+        },
+        {
+          term: "バージョン管理",
+          reading: "ばーじょんかんり",
+          romaji: "baajon kanri",
+          english: "Version Control",
+          category: "dev",
+          meaning: "ソースコードの変更履歴を管理するシステム。Gitが代表的。",
+          example_jp: "Gitでコードのバージョン管理を行う。",
+          example_en: "Manage code versions with Git.",
+        },
+        {
+          term: "リファクタリング",
+          reading: "りふぁくたりんぐ",
+          romaji: "rifakutaringu",
+          english: "Refactoring",
+          category: "dev",
+          meaning: "外部からの動作を変えずにコードの内部構造を改善すること。",
+          example_jp: "レガシーコードをリファクタリングして可読性を上げた。",
+          example_en: "Improved readability by refactoring legacy code.",
+        },
+        {
+          term: "デバッグ",
+          reading: "でばっぐ",
+          romaji: "debaggu",
+          english: "Debug",
+          category: "dev",
+          meaning: "プログラムのバグ（エラー）を発見し修正するプロセス。",
+          example_jp: "デバッガーを使ってバグの原因を特定した。",
+          example_en: "Used the debugger to identify the cause of the bug.",
+        },
+        {
+          term: "オープンソース",
+          reading: "おーぷんそーす",
+          romaji: "oopun soosu",
+          english: "Open Source",
+          category: "dev",
+          meaning:
+            "ソースコードが公開されていて誰でも利用・改変できるソフトウェア。",
+          example_jp: "このプロジェクトはMITライセンスのオープンソースです。",
+          example_en: "This project is open source under the MIT license.",
+        },
+        {
+          term: "アジャイル",
+          reading: "あじゃいる",
+          romaji: "ajairu",
+          english: "Agile",
+          category: "dev",
+          meaning: "反復的な小さなサイクルでソフトウェア開発を進める手法。",
+          example_jp: "アジャイル開発でスプリントごとに機能をリリースする。",
+          example_en: "Release features each sprint using Agile development.",
+        },
+        {
+          term: "フレームワーク",
+          reading: "ふれーむわーく",
+          romaji: "fureemuwaku",
+          english: "Framework",
+          category: "dev",
+          meaning:
+            "アプリケーション開発を効率化するための骨組みとなるソフトウェア。",
+          example_jp: "ReactフレームワークでSPAを構築する。",
+          example_en: "Build a SPA using the React framework.",
+        },
+        {
+          term: "キャッシュ",
+          reading: "きゃっしゅ",
+          romaji: "kyasshu",
+          english: "Cache",
+          category: "dev",
+          meaning:
+            "頻繁にアクセスするデータを高速な記憶領域に一時保存する仕組み。",
+          example_jp: "キャッシュを活用してAPIのレスポンスを高速化した。",
+          example_en: "Improved API response speed by utilizing cache.",
+        },
+        {
+          term: "ログ",
+          reading: "ろぐ",
+          romaji: "rogu",
+          english: "Log",
+          category: "dev",
+          meaning:
+            "システムの動作や障害の記録。トラブルシューティングに使われる。",
+          example_jp: "エラーログを解析して障害の原因を調査した。",
+          example_en:
+            "Analyzed error logs to investigate the cause of the failure.",
+        },
+
+        // AI
+        {
+          term: "機械学習",
+          reading: "きかいがくしゅう",
+          romaji: "kikai gakushuu",
+          english: "Machine Learning",
+          category: "ai",
+          meaning:
+            "データからパターンを学習してタスクを実行するAI技術の一分野。",
+          example_jp: "機械学習モデルで顧客の離脱を予測する。",
+          example_en: "Predict customer churn with a machine learning model.",
+        },
+        {
+          term: "深層学習",
+          reading: "しんそうがくしゅう",
+          romaji: "shinsou gakushuu",
+          english: "Deep Learning",
+          category: "ai",
+          meaning: "多層のニューラルネットワークを用いた機械学習の手法。",
+          example_jp: "深層学習で画像認識の精度が大幅に向上した。",
+          example_en:
+            "Image recognition accuracy improved greatly with deep learning.",
+        },
+        {
+          term: "自然言語処理",
+          reading: "しぜんげんごしょり",
+          romaji: "shizen gengo shori",
+          english: "Natural Language Processing (NLP)",
+          category: "ai",
+          meaning: "コンピューターが人間の言語を理解・生成するための技術分野。",
+          example_jp: "自然言語処理で顧客レビューを自動分析する。",
+          example_en: "Automatically analyze customer reviews with NLP.",
+        },
+        {
+          term: "モデル訓練",
+          reading: "もでるくんれん",
+          romaji: "moderu kunren",
+          english: "Model Training",
+          category: "ai",
+          meaning:
+            "データを使って機械学習モデルのパラメーターを最適化するプロセス。",
+          example_jp: "大量のデータでモデル訓練を行い精度を向上させた。",
+          example_en:
+            "Improved accuracy by training the model on large datasets.",
+        },
+        {
+          term: "推論",
+          reading: "すいろん",
+          romaji: "suiron",
+          english: "Inference",
+          category: "ai",
+          meaning: "学習済みモデルを使って新しいデータに対して予測を行うこと。",
+          example_jp: "訓練済みモデルで推論を実行してリアルタイム予測を行う。",
+          example_en:
+            "Run inference with the trained model for real-time predictions.",
+        },
+        {
+          term: "過学習",
+          reading: "かがくしゅう",
+          romaji: "kagakushuu",
+          english: "Overfitting",
+          category: "ai",
+          meaning:
+            "訓練データに過剰適合し、新しいデータへの汎化性能が低下すること。",
+          example_jp: "過学習を防ぐためにドロップアウトを適用した。",
+          example_en: "Applied dropout to prevent overfitting.",
+        },
+
+        // HARDWARE
+        {
+          term: "サーバー",
+          reading: "さーばー",
+          romaji: "saabaa",
+          english: "Server",
+          category: "hardware",
+          meaning:
+            "ネットワーク上で他のコンピューターにサービスを提供するコンピューター。",
+          example_jp: "Webサーバーにリクエストを送信してレスポンスを受け取る。",
+          example_en:
+            "Send a request to the web server and receive a response.",
+        },
+        {
+          term: "CPU",
+          reading: "しーぴーゆー",
+          romaji: "shi pi yuu",
+          english: "CPU (Central Processing Unit)",
+          category: "hardware",
+          meaning: "コンピューターの演算処理を担う中央処理装置。",
+          example_jp: "CPUの使用率が高くてサーバーの処理が遅い。",
+          example_en: "Server processing is slow due to high CPU usage.",
+        },
+        {
+          term: "GPU",
+          reading: "じーぴーゆー",
+          romaji: "ji pi yuu",
+          english: "GPU (Graphics Processing Unit)",
+          category: "hardware",
+          meaning: "並列演算を高速処理する装置。機械学習にも広く使われる。",
+          example_jp: "GPUクラスターで機械学習モデルを高速訓練する。",
+          example_en: "Train machine learning models fast on GPU clusters.",
+        },
+        {
+          term: "メモリ",
+          reading: "めもり",
+          romaji: "memori",
+          english: "Memory (RAM)",
+          category: "hardware",
+          meaning: "CPUが処理中のデータを一時保存する高速な記憶装置。",
+          example_jp: "メモリ不足でアプリケーションがクラッシュした。",
+          example_en: "The application crashed due to insufficient memory.",
+        },
+        {
+          term: "ストレージ",
+          reading: "すとれーじ",
+          romaji: "sutoreji",
+          english: "Storage",
+          category: "hardware",
+          meaning: "データを永続的に保存するための記憶装置。HDDやSSDなど。",
+          example_jp: "SSDストレージに変更してデータ読み書き速度が向上した。",
+          example_en:
+            "Data read/write speed improved after switching to SSD storage.",
+        },
+        {
+          term: "データセンター",
+          reading: "でーたせんたー",
+          romaji: "deeta sentaa",
+          english: "Data Center",
+          category: "hardware",
+          meaning: "大量のサーバーやネットワーク機器を集中管理する施設。",
+          example_jp: "東京のデータセンターにサーバーを設置した。",
+          example_en: "Installed servers in the Tokyo data center.",
+        },
+      ];
+
+      /* ══════════════════════════════════════════════
+   KUROMOJI TOKENIZER
+══════════════════════════════════════════════ */
+      let tokenizer = null;
+      let tokenizerLoading = false;
+
+      function loadTokenizer() {
+        return new Promise((resolve, reject) => {
+          if (tokenizer) {
+            resolve(tokenizer);
+            return;
+          }
+          if (tokenizerLoading) {
+            const wait = setInterval(() => {
+              if (tokenizer) {
+                clearInterval(wait);
+                resolve(tokenizer);
+              }
+            }, 200);
+            return;
+          }
+          tokenizerLoading = true;
+          const status = document.getElementById("furi-status");
+          status.className = "status-line loading";
+          status.textContent =
+            "Loading Japanese dictionary… please wait a moment ⏳";
+          document.getElementById("furi-loader").classList.add("show");
+
+          kuromoji.builder({ dicPath: "./dict" }).build((err, tok) => {
+            document.getElementById("furi-loader").classList.remove("show");
+            if (err) {
+              reject(err);
+              return;
+            }
+            tokenizer = tok;
+            resolve(tokenizer);
+          });
+        });
+      }
+
+      async function doFurigana() {
+        const text = document.getElementById("furi-input").value.trim();
+        if (!text) return;
+        const btn = document.getElementById("furi-btn");
+        const status = document.getElementById("furi-status");
+        const out = document.getElementById("furi-out");
+
+        btn.disabled = true;
+
+        try {
+          const tok = await loadTokenizer();
+          status.className = "status-line loading";
+          status.textContent = "Analysing text…";
+
+          const tokens = tok.tokenize(text);
+          let html = "";
+
+          tokens.forEach((token) => {
+            const surface = token.surface_form;
+            const reading = token.reading;
+
+            const hasKanji = /[\u4E00-\u9FAF\u3400-\u4DBF]/.test(surface);
+
+            if (hasKanji && reading) {
+              const hiragana = katakanaToHiragana(reading);
+              // Only add furigana if reading differs from surface
+              if (hiragana !== surface) {
+                html += `<ruby>${surface}<rt>${hiragana}</rt></ruby>`;
+              } else {
+                html += surface;
+              }
+            } else {
+              html += surface;
+            }
+          });
+
+          out.innerHTML =
+            html ||
+            '<span class="furigana-placeholder">No text to display.</span>';
+          status.className = "status-line ok";
+          status.textContent = `✓ Done — ${tokens.length} tokens analysed. Small hiragana readings appear above each kanji.`;
+        } catch (e) {
+          status.className = "status-line error";
+          status.textContent = "✗ Error loading dictionary: " + e.message;
+          out.innerHTML =
+            '<span class="furigana-placeholder">Could not load Kuromoji. Check your internet connection for first-time setup.</span>';
+        }
+        btn.disabled = false;
+      }
+
+      function katakanaToHiragana(str) {
+        return str.replace(/[\u30A1-\u30F6]/g, (ch) =>
+          String.fromCharCode(ch.charCodeAt(0) - 0x60),
+        );
+      }
+
+      /* ══════════════════════════════════════════════
+   DICTIONARY SEARCH
+══════════════════════════════════════════════ */
+      let activeFilter = "all";
+
+      function setF(el, cat) {
+        activeFilter = cat;
+        document
+          .querySelectorAll(".f-chip")
+          .forEach((c) => c.classList.remove("on"));
+        el.classList.add("on");
+        // Re-search if there's a current query
+        const q = document.getElementById("dict-input").value.trim();
+        if (q) doSearch();
+      }
+
+      function qs(term) {
+        document.getElementById("dict-input").value = term;
+        doSearch();
+        document
+          .getElementById("dictionary")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      function setEx(txt) {
+        document.getElementById("furi-input").value = txt;
+        document
+          .getElementById("furigana")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      function doSearch() {
+        const raw = document
+          .getElementById("dict-input")
+          .value.trim()
+          .toLowerCase();
+        if (!raw) return;
+        const results = document.getElementById("dict-results");
+
+        let matches = DICT.filter((e) => {
+          const inCat = activeFilter === "all" || e.category === activeFilter;
+          if (!inCat) return false;
+
+          return (
+            e.term.includes(raw) ||
+            e.term.toLowerCase().includes(raw) ||
+            e.reading.includes(raw) ||
+            e.romaji.toLowerCase().includes(raw) ||
+            e.english.toLowerCase().includes(raw) ||
+            e.meaning.includes(raw) ||
+            e.example_jp.includes(raw)
+          );
+        });
+
+        if (!matches.length) {
+          // Fuzzy: check each word in query
+          const words = raw.split(/\s+/);
+          matches = DICT.filter((e) => {
+            const inCat = activeFilter === "all" || e.category === activeFilter;
+            if (!inCat) return false;
+            const haystack = (
+              e.term +
+              e.reading +
+              e.romaji +
+              e.english +
+              e.meaning
+            ).toLowerCase();
+            return words.some((w) => haystack.includes(w));
+          });
+        }
+
+        if (!matches.length) {
+          results.innerHTML = `<div class="dict-empty"><div class="big">🤔</div>No results for "<strong>${raw}</strong>"<br><span style="font-size:13px;margin-top:8px;display:block;">Try English, Japanese, or romaji (e.g. "kuraudo" for クラウド)</span></div>`;
+          return;
+        }
+
+        results.innerHTML =
+          `<p class="result-count">${matches.length} result${matches.length !== 1 ? "s" : ""} for "${raw}"</p>` +
+          '<div class="dict-results">' +
+          matches
+            .map(
+              (e) => `
+      <div class="dict-entry">
+        <div class="entry-head">
+          <span class="entry-term">${e.term}</span>
+          <span class="entry-reading">${e.reading}</span>
+          <span class="entry-cat ${e.category}">${e.category}</span>
+        </div>
+        <div class="entry-en">${e.english}</div>
+        <div class="entry-meaning">${e.meaning}</div>
+        <div class="entry-example">
+          ${e.example_jp}
+          <div class="ex-en">${e.example_en}</div>
+        </div>
+      </div>`,
+            )
+            .join("") +
+          "</div>";
+      }
+
+      /* NAV active state */
+      window.addEventListener("scroll", () => {
+        const sections = ["furigana", "dictionary"];
+        let current = "furigana";
+        sections.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && window.scrollY >= el.offsetTop - 120) current = id;
+        });
+        document.querySelectorAll(".nav-links a").forEach((a) => {
+          a.classList.toggle(
+            "active",
+            a.getAttribute("href") === "#" + current,
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
