@@ -1,0 +1,1 @@
+# Kanji-Bridge-By-Akihiro
