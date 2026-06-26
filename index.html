@@ -345,112 +345,69 @@
         document.getElementById("ready-banner").classList.add("show");
       }
 
-      /* ── IFRAME WORKER — the only way to avoid freeze in sandboxed iframes ──
-         We create a hidden iframe and post messages to it. The iframe loads
-         Kuromoji and tokenizes in its own JS context (separate from main thread
-         task queue), preventing the main thread from blocking. ── */
-      let iframeWorker = null;
-      let pendingResolve = null, pendingReject = null;
 
-      function createIframeWorker() {
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'display:none;position:absolute;width:0;height:0;border:0;';
-        iframe.sandbox = 'allow-scripts allow-same-origin';
-        document.body.appendChild(iframe);
 
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        iframeDoc.open();
-        iframeDoc.write(`<!DOCTYPE html><html><head><script>
-          var tokenizer = null;
-          var DICT = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict';
+      /* ── TOKENIZER ── */
+      let mainTokenizer = null;
 
-          function k2h(str) {
-            return str.replace(/[\\u30A1-\\u30F6]/g, function(ch) {
-              return String.fromCharCode(ch.charCodeAt(0) - 0x60);
-            });
-          }
+      function k2h(str) {
+        return str.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+      }
 
-          function loadScript(src, cb) {
-            var s = document.createElement('script');
-            s.src = src;
-            s.onload = cb;
-            s.onerror = function(){ parent.postMessage({type:'error',msg:'Failed to load Kuromoji'}, '*'); };
-            document.head.appendChild(s);
-          }
-
-          window.addEventListener('message', function(e) {
-            if (e.data.type === 'init') {
-              loadScript('https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js', function() {
-                kuromoji.builder({ dicPath: DICT }).build(function(err, tok) {
-                  if (err) { parent.postMessage({type:'error', msg: err.message}, '*'); return; }
-                  tokenizer = tok;
-                  parent.postMessage({type:'ready'}, '*');
-                });
-              });
-            } else if (e.data.type === 'tokenize') {
-              if (!tokenizer) { parent.postMessage({type:'error',msg:'Not ready'}, '*'); return; }
-              try {
-                var text = e.data.text;
-                var tokens = tokenizer.tokenize(text);
-                var html = '', count = 0;
-                for (var idx = 0; idx < tokens.length; idx++) {
-                  var tok = tokens[idx];
-                  var surface = tok.surface_form;
-                  var reading = tok.reading;
-                  var hasKanji = /[\\u4E00-\\u9FAF\\u3400-\\u4DBF]/.test(surface);
-                  var pos = tok.pos || '';
-                  var base = tok.basic_form || surface;
-                  if (hasKanji && reading) {
-                    var hira = k2h(reading);
-                    if (hira !== surface) {
-                      html += '<ruby data-surface="' + encodeURIComponent(surface) +
-                        '" data-reading="' + encodeURIComponent(hira) +
-                        '" data-pos="' + encodeURIComponent(pos) +
-                        '" data-base="' + encodeURIComponent(base) + '">' +
-                        surface + '<rt>' + hira + '<\\/rt><\\/ruby>';
-                      count++;
-                      continue;
-                    }
-                  }
-                  var esc = surface.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                  html += '<span data-surface="' + encodeURIComponent(surface) +
-                    '" data-reading="' + encodeURIComponent(reading || surface) +
-                    '" data-pos="' + encodeURIComponent(pos) +
-                    '" data-base="' + encodeURIComponent(base) +
-                    '" class=\\"word-token\\">' + esc + '<\\/span>';
-                }
-                parent.postMessage({type:'result', html: html, count: count}, '*');
-              } catch(err) {
-                parent.postMessage({type:'error', msg: err.message}, '*');
-              }
+      function buildTokenHTML(tokens) {
+        let html = '', count = 0;
+        tokens.forEach(tok => {
+          const surface = tok.surface_form;
+          const reading = tok.reading;
+          const hasKanji = /[\u4E00-\u9FAF\u3400-\u4DBF]/.test(surface);
+          const pos = tok.pos || '';
+          const base = tok.basic_form || surface;
+          if (hasKanji && reading) {
+            const hira = k2h(reading);
+            if (hira !== surface) {
+              html += '<ruby data-surface="' + encodeURIComponent(surface) +
+                '" data-reading="' + encodeURIComponent(hira) +
+                '" data-pos="' + encodeURIComponent(pos) +
+                '" data-base="' + encodeURIComponent(base) + '">' +
+                surface + '<rt>' + hira + '</rt></ruby>';
+              count++;
+              return;
             }
-          });
-        <\/script></head><body></body></html>`);
-        iframeDoc.close();
+          }
+          const esc = surface.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          html += '<span data-surface="' + encodeURIComponent(surface) +
+            '" data-reading="' + encodeURIComponent(reading || surface) +
+            '" data-pos="' + encodeURIComponent(pos) +
+            '" data-base="' + encodeURIComponent(base) +
+            '" class="word-token">' + esc + '</span>';
+        });
+        return { html, count };
+      }
 
-        window.addEventListener('message', function(e) {
-          if (e.data.type === 'ready') {
-            workerReady = true;
-            setOverlayProgress(100, "✓ Ready!");
-            setTimeout(hideOverlay, 400);
-            if (workerReadyResolve) workerReadyResolve();
-          } else if (e.data.type === 'result') {
-            if (pendingResolve) { pendingResolve({ html: e.data.html, count: e.data.count }); pendingResolve = null; pendingReject = null; }
-          } else if (e.data.type === 'error') {
+      function initKuromoji() {
+        const DICT = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict';
+        kuromoji.builder({ dicPath: DICT }).build((err, tok) => {
+          if (err) {
             setOverlayProgress(0, "✗ Failed — check internet connection.");
             document.getElementById("overlay-steps").style.color = "#c0392b";
-            if (pendingReject) { pendingReject(new Error(e.data.msg)); pendingResolve = null; pendingReject = null; }
+            return;
           }
+          mainTokenizer = tok;
+          workerReady = true;
+          setOverlayProgress(100, "✓ Ready!");
+          setTimeout(hideOverlay, 400);
+          if (workerReadyResolve) workerReadyResolve();
         });
-
-        iframeWorker = iframe;
       }
 
       function tokenizeAsync(text) {
         return new Promise((resolve, reject) => {
-          pendingResolve = resolve;
-          pendingReject = reject;
-          iframeWorker.contentWindow.postMessage({ type: 'tokenize', text: text }, '*');
+          if (!mainTokenizer) { reject(new Error('Tokenizer not ready')); return; }
+          // 80ms delay so browser paints the loader bar before we block
+          setTimeout(() => {
+            try { resolve(buildTokenHTML(mainTokenizer.tokenize(text))); }
+            catch(e) { reject(e); }
+          }, 80);
         });
       }
 
@@ -720,11 +677,11 @@
         progressSteps.forEach(([pct, delay, msg]) => {
           setTimeout(() => { if (!workerReady) setOverlayProgress(pct, msg); }, delay);
         });
-        createIframeWorker();
-        // Tell iframe to init after it's ready
-        setTimeout(() => {
-          iframeWorker.contentWindow.postMessage({ type: 'init' }, '*');
-        }, 100);
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js';
+        s.onload = () => initKuromoji();
+        s.onerror = () => setOverlayProgress(0, "✗ Failed to load — check internet connection.");
+        document.head.appendChild(s);
         checkURLHash();
       });
     </script>
