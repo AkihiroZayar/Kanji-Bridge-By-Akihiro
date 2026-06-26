@@ -178,6 +178,14 @@
       footer p { margin-top: 8px; max-width: 560px; margin-left: auto; margin-right: auto; }
       footer .foot-dev { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; }
 
+
+      /* PROCESSING OVERLAY */
+      #proc-overlay { display:none; position:fixed; inset:0; z-index:8888; background:rgba(15,14,23,0.6); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+      #proc-overlay.show { display:flex; }
+      .proc-card { background:var(--surface); border-radius:16px; padding:2rem 2.5rem; text-align:center; box-shadow:0 20px 60px rgba(74,63,192,0.25); }
+      .proc-spinner { font-size:36px; animation:spin 1s linear infinite; display:block; margin-bottom:12px; }
+      @keyframes spin { to { transform:rotate(360deg); } }
+      .proc-msg { font-size:14px; color:var(--ink-mid); }
       .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; z-index: 9998; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
       .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -196,6 +204,13 @@
         <div class="overlay-sub">This only happens once.<br>The dictionary is downloading (~7MB).</div>
         <div class="overlay-bar-wrap"><div class="overlay-bar" id="overlay-bar"></div></div>
         <div class="overlay-steps" id="overlay-steps">Starting…</div>
+      </div>
+    </div>
+
+    <div id="proc-overlay">
+      <div class="proc-card">
+        <span class="proc-spinner">⚙️</span>
+        <div class="proc-msg">Processing Japanese text…<br><span style="font-size:11px;color:var(--ink-soft);">This may take a moment</span></div>
       </div>
     </div>
     <div class="toast" id="toast"></div>
@@ -345,73 +360,48 @@
         document.getElementById("ready-banner").classList.add("show");
       }
 
+      /* KUROMOJI — main thread, script tag load */
+      let mainTok = null;
 
-
-      /* ── TOKENIZER ── */
-      let mainTokenizer = null;
-
-      function k2h(str) {
-        return str.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
-      }
-
-      function buildTokenHTML(tokens) {
-        let html = '', count = 0;
-        tokens.forEach(tok => {
-          const surface = tok.surface_form;
-          const reading = tok.reading;
-          const hasKanji = /[\u4E00-\u9FAF\u3400-\u4DBF]/.test(surface);
-          const pos = tok.pos || '';
-          const base = tok.basic_form || surface;
-          if (hasKanji && reading) {
-            const hira = k2h(reading);
-            if (hira !== surface) {
-              html += '<ruby data-surface="' + encodeURIComponent(surface) +
-                '" data-reading="' + encodeURIComponent(hira) +
-                '" data-pos="' + encodeURIComponent(pos) +
-                '" data-base="' + encodeURIComponent(base) + '">' +
-                surface + '<rt>' + hira + '</rt></ruby>';
-              count++;
-              return;
-            }
-          }
-          const esc = surface.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          html += '<span data-surface="' + encodeURIComponent(surface) +
-            '" data-reading="' + encodeURIComponent(reading || surface) +
-            '" data-pos="' + encodeURIComponent(pos) +
-            '" data-base="' + encodeURIComponent(base) +
-            '" class="word-token">' + esc + '</span>';
-        });
-        return { html, count };
+      function k2h(s) {
+        return s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
       }
 
       function initKuromoji() {
-        const DICT = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict';
-        kuromoji.builder({ dicPath: DICT }).build((err, tok) => {
-          if (err) {
-            setOverlayProgress(0, "✗ Failed — check internet connection.");
-            document.getElementById("overlay-steps").style.color = "#c0392b";
-            return;
-          }
-          mainTokenizer = tok;
+        kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }).build(function(err, t) {
+          if (err) { setOverlayProgress(0, 'Failed — check connection.'); return; }
+          mainTok = t;
           workerReady = true;
-          setOverlayProgress(100, "✓ Ready!");
+          setOverlayProgress(100, '✓ Ready!');
           setTimeout(hideOverlay, 400);
           if (workerReadyResolve) workerReadyResolve();
         });
       }
 
       function tokenizeAsync(text) {
-        return new Promise((resolve, reject) => {
-          if (!mainTokenizer) { reject(new Error('Tokenizer not ready')); return; }
-          // 80ms delay so browser paints the loader bar before we block
-          setTimeout(() => {
-            try { resolve(buildTokenHTML(mainTokenizer.tokenize(text))); }
-            catch(e) { reject(e); }
-          }, 80);
+        return new Promise(function(resolve, reject) {
+          if (!mainTok) { reject(new Error('Not ready')); return; }
+          setTimeout(function() {
+            try {
+              var tokens = mainTok.tokenize(text);
+              var html = '', count = 0;
+              tokens.forEach(function(t) {
+                var s = t.surface_form, r = t.reading, pos = t.pos || '', base = t.basic_form || s;
+                var h = r ? k2h(r) : r;
+                if (/[一-龯㐀-䶿]/.test(s) && h && h !== s) {
+                  html += '<ruby data-surface="' + encodeURIComponent(s) + '" data-reading="' + encodeURIComponent(h) + '" data-pos="' + encodeURIComponent(pos) + '" data-base="' + encodeURIComponent(base) + '">' + s + '<rt>' + h + '</rt></ruby>';
+                  count++; return;
+                }
+                var esc = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html += '<span data-surface="' + encodeURIComponent(s) + '" data-reading="' + encodeURIComponent(r || s) + '" data-pos="' + encodeURIComponent(pos) + '" data-base="' + encodeURIComponent(base) + '" class="word-token">' + esc + '</span>';
+              });
+              resolve({ html: html, count: count });
+            } catch(e) { reject(e); }
+          }, 0);
         });
       }
 
-      const progressSteps = [
+            const progressSteps = [
         [15, 400, "Connecting to dictionary server…"],
         [30, 1200, "Downloading dictionary files…"],
         [50, 2800, "Loading grammar data…"],
@@ -570,6 +560,7 @@
         loader.classList.add("show");
         status.className = "status-line loading";
         status.textContent = "Analysing text…";
+        document.getElementById('proc-overlay').classList.add('show');
 
         try {
           if (!workerReady) { status.textContent = "Still loading dictionary…"; await workerReadyPromise; }
@@ -590,6 +581,7 @@
           document.getElementById('furi-out').innerHTML = '<span class="furigana-placeholder">Failed. Please check your internet connection.</span>';
         }
         loader.classList.remove("show");
+        document.getElementById('proc-overlay').classList.remove('show');
         btn.disabled = false;
       }
 
@@ -677,11 +669,11 @@
         progressSteps.forEach(([pct, delay, msg]) => {
           setTimeout(() => { if (!workerReady) setOverlayProgress(pct, msg); }, delay);
         });
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js';
-        s.onload = () => initKuromoji();
-        s.onerror = () => setOverlayProgress(0, "✗ Failed to load — check internet connection.");
-        document.head.appendChild(s);
+        var ks = document.createElement('script');
+        ks.src = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js';
+        ks.onload = function() { initKuromoji(); };
+        ks.onerror = function() { setOverlayProgress(0, 'Failed to load — check connection.'); };
+        document.head.appendChild(ks);
         checkURLHash();
       });
     </script>
